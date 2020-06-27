@@ -19,6 +19,7 @@ DEFAULT_TEMPLATES_NAMES = [
     'terminal_app.svg',
     'ubuntu.svg',
     'window_frame_js.svg',
+    'window_frame_js_audio.svg',
     'window_frame_powershell.svg',
     'window_frame.svg',
     'xterm.svg',
