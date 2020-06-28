@@ -81,28 +81,20 @@
     <use xlink:href="#icon-pause" id="pause-button" class="foreground"/>
     <script type="text/javascript" id="generated-js"></script>
     <script type="text/javascript">
-var animation = document.getElementById("screen_view").animate(
-    termtosvg_vars.transforms,
-    termtosvg_vars.timings
-)
+
+var audio = document.getElementById('audio');
 var terminal   = document.getElementById('terminal')
 var play_button = terminal.getElementById('play-button');
 var pause_button = terminal.getElementById('pause-button');
 var is_playing = true;
 var current_time = 0;
-var audio = document.getElementById('audio');
 audio.currentTime = current_time;
-audio.play();
 audio.loop = true;
+var animation;
 
-animation.onfinish = function() {
-  play_button.setAttribute('display', 'inline')
-  pause_button.setAttribute('display', 'none')
-  is_playing = false;
-  current_time = 0;
-  audio.currentTime = current_time;
-  audio.play();
-};
+
+
+
 
 function togglePlayPause() {
     if (is_playing) {
@@ -123,9 +115,9 @@ function togglePlayPause() {
 play_button.addEventListener('click', togglePlayPause, false)
 pause_button.addEventListener('click', togglePlayPause, false)
 
-
 var style = getComputedStyle(terminal);
-var animation_duration = termtosvg_vars.timings.duration / 1000
+//var animation_duration = termtosvg_vars.timings.duration / 1000
+var animation_duration;
 var timer = terminal.getElementById('timer')
 
 function timer_from_seconds(t) {
@@ -137,7 +129,6 @@ function update_timer() {
     current_time = (animation.currentTime / 1000) % animation_duration
     timer.textContent =  timer_from_seconds(current_time) + "/" + timer_from_seconds(animation_duration)
 }
-setInterval(update_timer, "100ms")
 
 
 
@@ -174,6 +165,7 @@ var move = function(evt){
 terminal.getElementById('wide_track').addEventListener('click', move, false);
 terminal.getElementById('track').addEventListener('click', move, false);
 
+
 // Enable slider button dragging along the track
 var dragging = false;
 slider_1.addEventListener('mousedown',function(evt){
@@ -202,6 +194,27 @@ function update_slider_button() {
     slider_1.setAttribute('x', parseInt(current_position)+'px')
 }
 
-setInterval(update_slider_button, "100ms")
+audio.onloadedmetadata = function (event) {
+  termtosvg_vars.timings.duration = this.duration * 1000;
+  animation_duration = termtosvg_vars.timings.duration / 1000
+  console.log(this.duration * 1000);
+  animation = document.getElementById("screen_view").animate(
+    termtosvg_vars.transforms,
+    termtosvg_vars.timings
+  );
+
+  animation.onfinish = function() {
+    play_button.setAttribute('display', 'inline')
+    pause_button.setAttribute('display', 'none')
+    is_playing = false;
+    current_time = 0;
+  };
+
+  setInterval(update_timer, "100ms")
+  setInterval(update_slider_button, "100ms")
+  pause_button.dispatchEvent(new MouseEvent('click'));
+};
+
+
 </script>
 </svg>
