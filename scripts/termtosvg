@@ -7,27 +7,5 @@ import time
 
 
 if __name__ == '__main__':
-    proc = 0
-    if ('window_frame_js_audio' in sys.argv):
-        proc = subprocess.Popen(['ffmpeg'
-            , '-nostdin'
-            , '-hide_banner'
-            , '-f'
-            , 'avfoundation'
-            , '-y'
-            , '-i'
-            , ':0'
-            , '-f'
-            , 'mp3'
-            , 'hello.mp3'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     termtosvg.main.main()
-    if (proc == 0):
-        sys.exit()
 
-    proc.terminate()
-    proc.wait()
-    base64 = subprocess.check_output(['base64', '-input', 'hello.mp3'])
-    base64 = base64.decode('utf-8')[:-1]
-    command = ['sed', '-i', ".bak", "s#hello.mp3#data:audio/mp3;base64,{}#g".format(base64), 'hello.svg']
-    subprocess.run(command)
-    subprocess.run(['rm', 'hello.mp3', 'hello.svg.bak'])

@@ -7,6 +7,7 @@ import shlex
 import sys
 import tempfile
 import pkg_resources
+import subprocess
 
 import termtosvg.config
 import termtosvg.anim
@@ -14,6 +15,8 @@ import termtosvg.anim
 logger = logging.getLogger('termtosvg')
 
 DEFAULT_LOOP_DELAY = 1000
+AUDIO = False
+OUTPUT = ""
 
 USAGE = """termtosvg [output_path] [-c COMMAND] [-D DELAY] [-g GEOMETRY]
                  [-m MIN_DURATION] [-M MAX_DURATION] [-s] [-t TEMPLATE] [-h]
@@ -30,7 +33,7 @@ def integral_duration_validation(duration):
     if duration.lower().endswith('ms'):
         duration = duration[:-len('ms')]
 
-    if duration.isdigit() and int(duration) >= 1:
+    if duration.isdigit() and int(duration) >= 0:
         return int(duration)
     raise ValueError('duration must be an integer greater than 0')
 
@@ -284,6 +287,8 @@ def main(args=None, input_fileno=None, output_fileno=None):
     if output_fileno is None:
         output_fileno = sys.stdout.fileno()
 
+    if ('window_frame_js_audio' in args):
+        AUDIO = True
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.INFO)
     console_formatter = logging.Formatter('%(message)s')
@@ -342,12 +347,34 @@ def main(args=None, input_fileno=None, output_fileno=None):
                         raise
 
         process_args = shlex.split(args.command)
+        proc = -1
+        if AUDIO:
+            proc = subprocess.Popen(['ffmpeg'
+                , '-nostdin'
+                , '-hide_banner'
+                , '-f'
+                , 'avfoundation'
+                , '-y'
+                , '-i'
+                , ':0'
+                , '-f'
+                , 'mp3'
+                , 'hello.mp3'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
         record_render_subcommand(process_args, args.still_frames, args.template,
                                  args.screen_geometry, input_fileno,
                                  output_fileno, output_path,
                                  args.min_frame_duration,
                                  args.max_frame_duration,
                                  args.loop_delay)
+        if (proc != -1):
+            proc.terminate()
+            proc.wait()
+            base64 = subprocess.check_output(['base64', '-input', 'hello.mp3'])
+            base64 = base64.decode('utf-8')[:-1]
+            command = ['sed', '-i', ".bak", "s#hello.mp3#data:audio/mp3;base64,{}#g".format(base64), output_path]
+            subprocess.run(command)
+            subprocess.run(['rm', 'hello.mp3', '{}.bak'.format(output_path)])
 
     for handler in logger.handlers:
         handler.close()
