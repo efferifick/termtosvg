@@ -349,6 +349,7 @@ def main(args=None, input_fileno=None, output_fileno=None):
         process_args = shlex.split(args.command)
         proc = -1
         if AUDIO:
+            audio_file_path = output_path.replace('svg', 'mp3')
             proc = subprocess.Popen(['ffmpeg'
                 , '-nostdin'
                 , '-hide_banner'
@@ -359,7 +360,7 @@ def main(args=None, input_fileno=None, output_fileno=None):
                 , ':0'
                 , '-f'
                 , 'mp3'
-                , 'hello.mp3'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                , audio_file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         record_render_subcommand(process_args, args.still_frames, args.template,
                                  args.screen_geometry, input_fileno,
@@ -370,11 +371,11 @@ def main(args=None, input_fileno=None, output_fileno=None):
         if (proc != -1):
             proc.terminate()
             proc.wait()
-            base64 = subprocess.check_output(['base64', '-input', 'hello.mp3'])
+            base64 = subprocess.check_output(['base64', '-input', audio_file_path])
             base64 = base64.decode('utf-8')[:-1]
             command = ['sed', '-i', ".bak", "s#hello.mp3#data:audio/mp3;base64,{}#g".format(base64), output_path]
             subprocess.run(command)
-            subprocess.run(['rm', 'hello.mp3', '{}.bak'.format(output_path)])
+            subprocess.run(['rm', audio_file_path, '{}.bak'.format(output_path)])
 
     for handler in logger.handlers:
         handler.close()
