@@ -8,6 +8,7 @@ import sys
 import tempfile
 import pkg_resources
 import subprocess
+import fileinput
 
 import termtosvg.config
 import termtosvg.anim
@@ -373,9 +374,12 @@ def main(args=None, input_fileno=None, output_fileno=None):
             proc.wait()
             base64 = subprocess.check_output(['base64', '-input', audio_file_path])
             base64 = base64.decode('utf-8')[:-1]
-            command = ['sed', '-i', ".bak", "s#hello.mp3#data:audio/mp3;base64,{}#g".format(base64), output_path]
-            subprocess.run(command)
-            subprocess.run(['rm', audio_file_path, '{}.bak'.format(output_path)])
+            with open(output_path, 'r') as f:
+               text = f.read()
+               text = text.replace('{}', base64) 
+            with open(output_path, 'w') as f:
+               f.write(text)
+            subprocess.run(['rm', audio_file_path])
 
     for handler in logger.handlers:
         handler.close()

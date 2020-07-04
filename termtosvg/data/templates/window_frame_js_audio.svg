@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="terminal" baseProfile="full" viewBox="0 0 703 469" width="703" version="1.1">
     <defs>
         <audio xmlns="http://www.w3.org/1999/xhtml" id="audio">
-           <source src="hello.mp3" type="audio/mpeg"/>
+           <source src="{}" type="audio/mpeg"/>
         </audio>
         <termtosvg:template_settings xmlns:termtosvg="https://github.com/nbedos/termtosvg">
             <termtosvg:screen_geometry columns="82" rows="19"/>
