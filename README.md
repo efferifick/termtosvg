@@ -5,3 +5,5 @@
 1. Record terminal session as SVG.
 2. Record audio with `ffmpeg`.
 3. Embed audio to SVG.
+
+[demo](https://efferifick.gitlab.io/eyewam/logs/2020-06-29.xhtml)
