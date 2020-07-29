@@ -3,12 +3,14 @@
 import argparse
 import logging
 import os
+import ffmpeg
 import shlex
 import sys
 import tempfile
 import pkg_resources
 import subprocess
 import fileinput
+import time
 import base64
 
 import termtosvg.config
@@ -289,6 +291,7 @@ def main(args=None, input_fileno=None, output_fileno=None):
     if output_fileno is None:
         output_fileno = sys.stdout.fileno()
 
+    global AUDIO
     if ('window_frame_js_audio' in args):
         AUDIO = True
     console_handler = logging.StreamHandler(sys.stderr)
@@ -349,30 +352,26 @@ def main(args=None, input_fileno=None, output_fileno=None):
                         raise
 
         process_args = shlex.split(args.command)
-        proc = -1
+        proc = False
         if AUDIO:
+            proc = True
             audio_file_path = output_path.replace('svg', 'mp3')
-            proc = subprocess.Popen(['ffmpeg'
-                , '-nostdin'
-                , '-hide_banner'
-                , '-f'
-                , 'avfoundation'
-                , '-y'
-                , '-i'
-                , ':0'
-                , '-f'
-                , 'mp3'
-                , audio_file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
+            process = (ffmpeg
+                .input(':0', format="avfoundation")
+                .output(audio_file_path, format='mp3')
+                .run_async(pipe_stdin=False, pipe_stderr=False, quiet=True, overwrite_output=True)
+            )
+
         record_render_subcommand(process_args, args.still_frames, args.template,
                                  args.screen_geometry, input_fileno,
                                  output_fileno, output_path,
                                  args.min_frame_duration,
                                  args.max_frame_duration,
                                  args.loop_delay)
-        if (proc != -1):
-            proc.terminate()
-            proc.wait()
+        if (proc):
+            process.terminate()
+            #process.communicate(str.encode("q"))
+            time.sleep(1)
             with open(audio_file_path, 'rb') as f:
                mp3_contents = f.read()
                mp3_contents = base64.b64encode(mp3_contents)
@@ -381,7 +380,7 @@ def main(args=None, input_fileno=None, output_fileno=None):
                text = text.replace('{}', 'data:audio/mp3;base64,{}'.format(mp3_contents.decode("utf-8")))
             with open(output_path, 'w') as f:
                f.write(text)
-            subprocess.run(['rm', audio_file_path])
+            os.remove(audio_file_path)
 
     for handler in logger.handlers:
         handler.close()

@@ -38,6 +38,7 @@ setup(
         'lxml',
         'pyte',
         'wcwidth',
+        'ffmpeg-python',
     ],
     extras_require={
         'dev': [
